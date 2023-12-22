@@ -14,5 +14,5 @@ type StringSet struct {
 }
 
 const (
-	GormCachePrefix = "gormcache"
+	TangCachePrefix = "TangCache"
 )

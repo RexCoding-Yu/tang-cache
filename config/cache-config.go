@@ -33,10 +33,10 @@ type CacheConfig struct {
 	InvalidateWhenUpdate bool
 
 	// CacheTTL 缓存过期时间
-	CacheTTL int64
+	CacheTTL uint64
 
 	// CacheMaxItemCnt 最大对象缓存数量，对于大数量的对象尽量限制。0是不限制。
-	CacheMaxItemCnt int64
+	CacheMaxItemCnt uint64
 
 	// CacheSize 仅对内存缓存生效，限制最大缓存数量。
 	CacheSize int
