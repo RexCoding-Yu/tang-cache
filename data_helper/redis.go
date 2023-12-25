@@ -2,9 +2,13 @@ package data_helper
 
 import (
 	"TangCache/config"
+	"TangCache/util"
+	"bytes"
 	"context"
+	"encoding/gob"
 	"errors"
 	"github.com/go-redis/redis/v8"
+	"reflect"
 )
 
 type RedisPlugin struct {
@@ -74,22 +78,131 @@ func (r *RedisPlugin) initScripts() error {
 	return nil
 }
 
+// CleanCache 清空缓存
 func (r *RedisPlugin) CleanCache(ctx context.Context) (int64, error) {
 	result := r.client.EvalSha(ctx, r.preloadScriptMap["batchKeyCleanScript"], []string{}, r.keyPrefix+":*")
 	return result.Int64()
 }
 
+// BatchKeyExist 批量判断Key是否存在于缓存中
 func (r *RedisPlugin) BatchKeyExist(ctx context.Context, keys []string) (bool, error) {
 	result := r.client.EvalSha(ctx, r.preloadScriptMap["batchKeyExistScript"], keys)
 	return result.Bool()
 }
 
+// KeyExist 判断一个Key是否存在
 func (r *RedisPlugin) KeyExist(ctx context.Context, key string) (int64, error) {
 	result := r.client.Exists(ctx, key)
 	return result.Result()
 }
 
-func (r *RedisPlugin) GetValue(ctx context.Context, key string) (string, error) {
-	result := r.client.Get(ctx, key)
-	return result.Result()
+// GetValue 通过Key获取Value
+func (r *RedisPlugin) GetValue(ctx context.Context, key string, ptr interface{}) error {
+	// 从Redis获取数据
+	data, err := r.client.Get(ctx, key).Bytes()
+	if err != nil {
+		return err
+	}
+	// 创建一个buffer用于读取数据
+	buffer := bytes.NewBuffer(data)
+	// 创建一个gob解码器
+	dec := gob.NewDecoder(buffer)
+	// 使用解码器将数据解码
+	if err := dec.Decode(ptr); err != nil {
+		return err
+	}
+	return nil
+}
+
+// SetValue 通过Key设置Value
+func (r *RedisPlugin) SetValue(ctx context.Context, pair util.Pair) error {
+	// 创建一个buffer用于存储序列化后的数据
+	var buffer bytes.Buffer
+	// 创建一个gob编码器
+	enc := gob.NewEncoder(&buffer)
+	// 使用编码器将数据编码
+	if err := enc.Encode(pair.Value); err != nil {
+		return err
+	}
+	// 将编码后的数据转换为字节切片并存储到Redis
+	_, err := r.client.Set(ctx, pair.Key, buffer.Bytes(), 0).Result()
+	return err
+}
+
+// BatchGetValue 批量获取缓存值
+func (r *RedisPlugin) BatchGetValue(ctx context.Context, keys []string, p reflect.Type) (interface{}, error) {
+	results := r.client.MGet(ctx, keys...)
+	err := results.Err()
+	val := results.Val()
+	if err != nil {
+		return nil, err
+	}
+
+	// 反射传入类型，创建切片
+	slice := reflect.MakeSlice(reflect.SliceOf(p), len(val), len(val))
+
+	// 填充切片
+	for i, v := range val {
+		// 从Redis获取的数据是字符串，需要转换为字节切片；断言value是字符串类型，并且转换
+		data := []byte(v.(string))
+		// 创建一个buffer用于读取数据
+		buffer := bytes.NewBuffer(data)
+		// 创建一个gob解码器
+		dec := gob.NewDecoder(buffer)
+		// 创建一个新的p类型的实例
+		value := reflect.New(p).Interface()
+		// 使用解码器将数据解码
+		if err := dec.Decode(value); err != nil {
+			return nil, err
+		}
+		// 将反序列化后的值存储到切片中
+		slice.Index(i).Set(reflect.ValueOf(value).Elem())
+	}
+
+	// 将切片作为接口返回
+	return slice.Interface(), nil
+}
+
+// BatchSetValue 批量插入
+func (r *RedisPlugin) BatchSetValue(ctx context.Context, pairs []util.Pair) error {
+	// 创建一个map来存储键值对
+	data := make(map[string]interface{})
+	for _, pair := range pairs {
+		// 创建一个buffer用于存储序列化后的数据
+		buffer := new(bytes.Buffer)
+		// 创建一个gob编码器
+		enc := gob.NewEncoder(buffer)
+		// 使用编码器将数据编码
+		if err := enc.Encode(pair.Value); err != nil {
+			return err
+		}
+		// 将编码后的数据转换为字符串，然后存储到map中
+		data[pair.Key] = buffer.String()
+	}
+
+	// 使用MSet函数将所有键值对存储到Redis中
+	result := r.client.MSet(ctx, data)
+	// 检查是否有错误
+	if err := result.Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteKey 删除Key对应的缓存
+func (r *RedisPlugin) DeleteKey(ctx context.Context, key string) (int64, error) {
+	results := r.client.Del(ctx, key)
+	return results.Result()
+}
+
+// BatchDeleteKeys 批量删除Key对应的缓存
+func (r *RedisPlugin) BatchDeleteKeys(ctx context.Context, keys []string) (int64, error) {
+	results := r.client.Del(ctx, keys...)
+	return results.Result()
+}
+
+// DeleteKeysWithPrefix 通过前缀删除对应的缓存
+func (r *RedisPlugin) DeleteKeysWithPrefix(ctx context.Context, keyPrefix string) (int64, error) {
+	results := r.client.EvalSha(ctx, r.preloadScriptMap["batchKeyCleanScript"], []string{"0"}, keyPrefix+":*")
+	return results.Int64()
 }
