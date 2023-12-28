@@ -8,7 +8,9 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/go-redis/redis/v8"
+	"github.com/vmihailenco/msgpack/v5"
 	"reflect"
+	"time"
 )
 
 type RedisPlugin struct {
@@ -28,11 +30,11 @@ func (r *RedisPlugin) Init(conf *config.CacheConfig, prefix string) error {
 	r.ttl = conf.CacheTTL
 	r.keyPrefix = prefix
 	r.preloadScriptMap = make(map[string]string)
-	return r.initScripts()
+	return r.InitScripts()
 }
 
-// 预加载部分可能用的到的脚本到Redis
-func (r *RedisPlugin) initScripts() error {
+// InitScripts 预加载部分可能用的到的脚本到Redis
+func (r *RedisPlugin) InitScripts() error {
 
 	if r.preloadScriptMap == nil {
 		panic("preloadScriptMap init fail")
@@ -115,17 +117,9 @@ func (r *RedisPlugin) GetValue(ctx context.Context, key string, ptr interface{})
 }
 
 // SetValue 通过Key设置Value
-func (r *RedisPlugin) SetValue(ctx context.Context, pair util.Pair) error {
-	// 创建一个buffer用于存储序列化后的数据
-	var buffer bytes.Buffer
-	// 创建一个gob编码器
-	enc := gob.NewEncoder(&buffer)
-	// 使用编码器将数据编码
-	if err := enc.Encode(pair.Value); err != nil {
-		return err
-	}
-	// 将编码后的数据转换为字节切片并存储到Redis
-	_, err := r.client.Set(ctx, pair.Key, buffer.Bytes(), 0).Result()
+func (r *RedisPlugin) SetValue(ctx context.Context, key string, value interface{}) error {
+	packValue, _ := msgpack.Marshal(value)
+	_, err := r.client.Set(ctx, key, packValue, time.Duration(r.ttl*1000000000)).Result()
 	return err
 }
 

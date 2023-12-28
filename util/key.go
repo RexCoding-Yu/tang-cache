@@ -27,10 +27,10 @@ func GenPrimaryCachePrefix(instanceId string, tableName string) string {
 	return TangCachePrefix + ":" + instanceId + ":p:" + tableName
 }
 
-func GenSearchCacheKey(instanceId string, tableName string, sql string, vars ...interface{}) string {
+func GenSearchCacheKey(instanceId string, tableName string, sql string, values ...interface{}) string {
 	buf := strings.Builder{}
 	buf.WriteString(sql)
-	for _, v := range vars {
+	for _, v := range values {
 		pv := reflect.ValueOf(v)
 		if pv.Kind() == reflect.Ptr {
 			buf.WriteString(fmt.Sprintf(":%v", pv.Elem()))
