@@ -9,6 +9,7 @@ import (
 	"errors"
 	"github.com/go-redis/redis/v8"
 	"github.com/vmihailenco/msgpack/v5"
+	"log"
 	"reflect"
 	"time"
 )
@@ -100,17 +101,15 @@ func (r *RedisPlugin) KeyExist(ctx context.Context, key string) (int64, error) {
 
 // GetValue 通过Key获取Value
 func (r *RedisPlugin) GetValue(ctx context.Context, key string, ptr interface{}) error {
-	// 从Redis获取数据
-	data, err := r.client.Get(ctx, key).Bytes()
+	value := r.client.Get(ctx, key)
+	valueBytes, err := value.Bytes()
 	if err != nil {
+		log.Fatal(err)
 		return err
 	}
-	// 创建一个buffer用于读取数据
-	buffer := bytes.NewBuffer(data)
-	// 创建一个gob解码器
-	dec := gob.NewDecoder(buffer)
-	// 使用解码器将数据解码
-	if err := dec.Decode(ptr); err != nil {
+	err = msgpack.Unmarshal(valueBytes, ptr)
+	if err != nil {
+		log.Fatal(err)
 		return err
 	}
 	return nil
