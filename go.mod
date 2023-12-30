@@ -1,4 +1,4 @@
-module tang-cache
+module github.com/RexCoding-Yu/tang-cache
 
 go 1.18
 
