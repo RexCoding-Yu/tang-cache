@@ -1,4 +1,4 @@
-module TangCache
+module tang-cache
 
 go 1.18
 
