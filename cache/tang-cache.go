@@ -83,7 +83,7 @@ func (c *TangCache) Init() error {
 
 	err := c.cache.Init(c.Config, prefix)
 	if err != nil {
-		log.Fatalf("[Init] cache init error: %v", err)
+		log.Printf("[Init] cache init error: %v", err)
 		return err
 	}
 	return nil

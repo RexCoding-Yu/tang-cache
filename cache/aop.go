@@ -107,7 +107,7 @@ func AfterQuery(cache *TangCache) func(db *gorm.DB) {
 						// 用msgpack压缩
 						cacheBytes, err := msgpack.Marshal(db.Statement.Dest)
 						if err != nil {
-							log.Fatalf("[AfterQuery] cannot marshal cache "+
+							log.Printf("[AfterQuery] cannot marshal cache "+
 								"for sql: %s, not cached", sql)
 							return
 						}
@@ -115,7 +115,7 @@ func AfterQuery(cache *TangCache) func(db *gorm.DB) {
 						// 尝试设置缓存
 						err = cache.SetSearchCache(ctx, tableName, objects, sql, vars)
 						if err != nil {
-							log.Fatalf("[AfterQuery] set search cache for sql: %s error: %v", sql, err)
+							log.Printf("[AfterQuery] set search cache for sql: %s error: %v", sql, err)
 							return
 						}
 						log.Printf("[AfterQuery] sql %s cached", sql)
@@ -163,7 +163,7 @@ func AfterUpdate(cache *TangCache) func(db *gorm.DB) {
 					log.Printf("[AfterUpdate] now start to invalidate search cache for table: %s", tableName)
 					err := cache.InvalidateSearchCache(ctx, tableName)
 					if err != nil {
-						log.Fatalf("[AfterUpdate] invalidating search cache for table %s error: %v",
+						log.Printf("[AfterUpdate] invalidating search cache for table %s error: %v",
 							tableName, err)
 						return
 					}
@@ -197,7 +197,7 @@ func AfterDelete(cache *TangCache) func(db *gorm.DB) {
 					log.Printf("[AfterUpdate] now start to invalidate search cache for table: %s", tableName)
 					err := cache.InvalidateSearchCache(ctx, tableName)
 					if err != nil {
-						log.Fatalf("[AfterUpdate] invalidating search cache for table %s error: %v",
+						log.Printf("[AfterUpdate] invalidating search cache for table %s error: %v",
 							tableName, err)
 						return
 					}

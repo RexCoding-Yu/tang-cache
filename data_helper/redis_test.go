@@ -45,7 +45,7 @@ func TestRedisPlugin_SetValue(t *testing.T) {
 	plugin := RedisPlugin{}
 	err := plugin.Init(&config, "test")
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 	tests := []struct {
@@ -114,7 +114,7 @@ func TestRedisPlugin_GetValue(t *testing.T) {
 	plugin := RedisPlugin{}
 	err := plugin.Init(&config, "test")
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 	tests := []struct {

@@ -104,12 +104,12 @@ func (r *RedisPlugin) GetValue(ctx context.Context, key string, ptr interface{})
 	value := r.client.Get(ctx, key)
 	valueBytes, err := value.Bytes()
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return err
 	}
 	err = msgpack.Unmarshal(valueBytes, ptr)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return err
 	}
 	return nil

@@ -2,6 +2,7 @@ package cache
 
 import (
 	"TangCache/config"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestSecondLevelCache(t *testing.T) {
-	dsn := "root:rex333153..@tcp(rex.fno.ink)/test_tang_cache?charset=utf8mb4"
+	dsn := "root:rex333153..@tcp(rex.fno.ink)/test_tang_cache?charset=utf8mb4&parseTime=True"
 	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	redisOption := &redis.Options{
@@ -45,6 +46,17 @@ func TestSecondLevelCache(t *testing.T) {
 	var users []User
 	// 不会命中缓存
 	db.Where("user_name = ?", "tangchongjie").Find(&users)
+	fmt.Print(users)
 	// 命中缓存
 	db.Where("user_name = ?", "tangchongjie").Find(&users)
+	fmt.Print(users)
+	// 命中缓存
+	db.Where("user_name = ?", "tangchongjie").Find(&users)
+	fmt.Print(users)
+	// 命中缓存
+	db.Where("user_name = ?", "tangchongjie").Find(&users)
+	fmt.Print(users)
+	// 命中缓存
+	db.Where("user_name = ?", "tangchongjie").Find(&users)
+	fmt.Print(users)
 }
