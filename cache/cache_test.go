@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"TangCache/config"
 	"fmt"
+	"github.com/RexCoding-Yu/tang-cache/config"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestSecondLevelCache(t *testing.T) {
-	dsn := "root:rex333153..@tcp(rex.fno.ink)/test_tang_cache?charset=utf8mb4&parseTime=True"
+	dsn := "name:pwd@tcp(url)/test_tang_cache?charset=utf8mb4&parseTime=True"
 	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	redisOption := &redis.Options{

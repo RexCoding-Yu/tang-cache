@@ -1,9 +1,9 @@
 package data_helper
 
 import (
-	"TangCache/config"
-	"TangCache/util"
 	"context"
+	"github.com/RexCoding-Yu/tang-cache/config"
+	"github.com/RexCoding-Yu/tang-cache/util"
 	"reflect"
 )
 

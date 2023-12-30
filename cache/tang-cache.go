@@ -1,11 +1,11 @@
 package cache
 
 import (
-	"TangCache/config"
-	"TangCache/data_helper"
-	"TangCache/util"
 	"context"
 	"fmt"
+	"github.com/RexCoding-Yu/tang-cache/config"
+	"github.com/RexCoding-Yu/tang-cache/data_helper"
+	"github.com/RexCoding-Yu/tang-cache/util"
 	"gorm.io/gorm"
 	"log"
 	"reflect"

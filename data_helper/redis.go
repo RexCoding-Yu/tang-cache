@@ -1,12 +1,12 @@
 package data_helper
 
 import (
-	"TangCache/config"
-	"TangCache/util"
 	"bytes"
 	"context"
 	"encoding/gob"
 	"errors"
+	"github.com/RexCoding-Yu/tang-cache/config"
+	"github.com/RexCoding-Yu/tang-cache/util"
 	"github.com/go-redis/redis/v8"
 	"github.com/vmihailenco/msgpack/v5"
 	"log"

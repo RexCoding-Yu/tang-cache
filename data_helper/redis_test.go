@@ -1,8 +1,8 @@
 package data_helper
 
 import (
-	"TangCache/config"
 	"context"
+	"github.com/RexCoding-Yu/tang-cache/config"
 	"github.com/go-redis/redis/v8"
 	"log"
 	"testing"
