@@ -10,7 +10,7 @@ import (
 )
 
 func TestSecondLevelCache(t *testing.T) {
-	dsn := "name:pwd@tcp(url)/test_tang_cache?charset=utf8mb4&parseTime=True"
+	dsn := "root:rex333153..@tcp(rex.fno.ink)/test_tang_cache?charset=utf8mb4&parseTime=True"
 	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	redisOption := &redis.Options{
