@@ -1,11 +1,11 @@
 package cache
 
 import (
-	"TangCache/config"
-	"TangCache/data_helper"
-	"TangCache/util"
 	"context"
 	"fmt"
+	"github.com/RexCoding-Yu/tang-cache/config"
+	"github.com/RexCoding-Yu/tang-cache/data_helper"
+	"github.com/RexCoding-Yu/tang-cache/util"
 	"gorm.io/gorm"
 	"log"
 	"reflect"
@@ -83,7 +83,7 @@ func (c *TangCache) Init() error {
 
 	err := c.cache.Init(c.Config, prefix)
 	if err != nil {
-		log.Fatalf("[Init] cache init error: %v", err)
+		log.Printf("[Init] cache init error: %v", err)
 		return err
 	}
 	return nil

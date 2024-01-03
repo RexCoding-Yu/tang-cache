@@ -1,12 +1,12 @@
 package data_helper
 
 import (
-	"TangCache/config"
-	"TangCache/util"
 	"bytes"
 	"context"
 	"encoding/gob"
 	"errors"
+	"github.com/RexCoding-Yu/tang-cache/config"
+	"github.com/RexCoding-Yu/tang-cache/util"
 	"github.com/go-redis/redis/v8"
 	"github.com/vmihailenco/msgpack/v5"
 	"log"
@@ -104,12 +104,12 @@ func (r *RedisPlugin) GetValue(ctx context.Context, key string, ptr interface{})
 	value := r.client.Get(ctx, key)
 	valueBytes, err := value.Bytes()
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return err
 	}
 	err = msgpack.Unmarshal(valueBytes, ptr)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return err
 	}
 	return nil

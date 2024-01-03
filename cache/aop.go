@@ -1,9 +1,9 @@
 package cache
 
 import (
-	"TangCache/config"
-	"TangCache/util"
 	"errors"
+	"github.com/RexCoding-Yu/tang-cache/config"
+	"github.com/RexCoding-Yu/tang-cache/util"
 	"github.com/go-redis/redis/v8"
 	"github.com/vmihailenco/msgpack/v5"
 	"gorm.io/gorm"
@@ -56,12 +56,16 @@ func BeforeQuery(cache *TangCache) func(db *gorm.DB) {
 				cacheValue, err := cache.GetSearchCache(ctx, tableName, sql, reflect.TypeOf(db.Statement.Model), db.Statement.Vars)
 				if err != nil {
 					if !errors.Is(err, redis.Nil) {
-						log.Printf("[BeforeQuery] get cache value for sql %s error: %v", sql, err)
+						if cache.Config.DebugMode {
+							log.Printf("[BeforeQuery] get cache value for sql %s error: %v", sql, err)
+						}
 					}
 					db.Error = nil
 					return
 				}
-				log.Printf("[BeforeQuery] get value: %s", cacheValue)
+				if cache.Config.DebugMode {
+					log.Printf("[BeforeQuery] get value: %s", cacheValue)
+				}
 				db.RowsAffected = 1
 				db.Statement.Dest = cacheValue
 				db.Error = util.SearchCacheHit
@@ -102,23 +106,30 @@ func AfterQuery(cache *TangCache) func(db *gorm.DB) {
 						if cache.Config.CacheMaxItemCnt > 0 && uint64(len(objects)) > cache.Config.CacheMaxItemCnt {
 							return
 						}
-
-						log.Printf("[AfterQuery] start to set search cache for sql: %s", sql)
+						if cache.Config.DebugMode {
+							log.Printf("[AfterQuery] start to set search cache for sql: %s", sql)
+						}
 						// 用msgpack压缩
 						cacheBytes, err := msgpack.Marshal(db.Statement.Dest)
 						if err != nil {
-							log.Fatalf("[AfterQuery] cannot marshal cache "+
+							log.Printf("[AfterQuery] cannot marshal cache "+
 								"for sql: %s, not cached", sql)
 							return
 						}
-						log.Printf("[AfterQuery] set cache: %v", string(cacheBytes))
+						if cache.Config.DebugMode {
+							log.Printf("[AfterQuery] set cache: %v", string(cacheBytes))
+						}
 						// 尝试设置缓存
 						err = cache.SetSearchCache(ctx, tableName, objects, sql, vars)
 						if err != nil {
-							log.Fatalf("[AfterQuery] set search cache for sql: %s error: %v", sql, err)
+							if cache.Config.DebugMode {
+								log.Printf("[AfterQuery] set search cache for sql: %s error: %v", sql, err)
+							}
 							return
 						}
-						log.Printf("[AfterQuery] sql %s cached", sql)
+						if cache.Config.DebugMode {
+							log.Printf("[AfterQuery] sql %s cached", sql)
+						}
 					}
 				}()
 
@@ -160,14 +171,20 @@ func AfterUpdate(cache *TangCache) func(db *gorm.DB) {
 				defer wg.Done()
 
 				if cache.Config.CacheLevel == config.CacheLevelAll || cache.Config.CacheLevel == config.CacheLevelOnlySearch {
-					log.Printf("[AfterUpdate] now start to invalidate search cache for table: %s", tableName)
+					if cache.Config.DebugMode {
+						log.Printf("[AfterUpdate] now start to invalidate search cache for table: %s", tableName)
+					}
 					err := cache.InvalidateSearchCache(ctx, tableName)
 					if err != nil {
-						log.Fatalf("[AfterUpdate] invalidating search cache for table %s error: %v",
-							tableName, err)
+						if cache.Config.DebugMode {
+							log.Printf("[AfterUpdate] invalidating search cache for table %s error: %v",
+								tableName, err)
+						}
 						return
 					}
-					log.Printf("[AfterUpdate] invalidating search cache for table: %s finished.", tableName)
+					if cache.Config.DebugMode {
+						log.Printf("[AfterUpdate] invalidating search cache for table: %s finished.", tableName)
+					}
 				}
 			}()
 
@@ -194,14 +211,20 @@ func AfterDelete(cache *TangCache) func(db *gorm.DB) {
 				defer wg.Done()
 
 				if cache.Config.CacheLevel == config.CacheLevelAll || cache.Config.CacheLevel == config.CacheLevelOnlySearch {
-					log.Printf("[AfterUpdate] now start to invalidate search cache for table: %s", tableName)
+					if cache.Config.DebugMode {
+						log.Printf("[AfterUpdate] now start to invalidate search cache for table: %s", tableName)
+					}
 					err := cache.InvalidateSearchCache(ctx, tableName)
 					if err != nil {
-						log.Fatalf("[AfterUpdate] invalidating search cache for table %s error: %v",
-							tableName, err)
+						if cache.Config.DebugMode {
+							log.Printf("[AfterUpdate] invalidating search cache for table %s error: %v",
+								tableName, err)
+						}
 						return
 					}
-					log.Printf("[AfterUpdate] invalidating search cache for table: %s finished.", tableName)
+					if cache.Config.DebugMode {
+						log.Printf("[AfterUpdate] invalidating search cache for table: %s finished.", tableName)
+					}
 				}
 			}()
 

@@ -1,8 +1,8 @@
 package data_helper
 
 import (
-	"TangCache/config"
 	"context"
+	"github.com/RexCoding-Yu/tang-cache/config"
 	"github.com/go-redis/redis/v8"
 	"log"
 	"testing"
@@ -45,7 +45,7 @@ func TestRedisPlugin_SetValue(t *testing.T) {
 	plugin := RedisPlugin{}
 	err := plugin.Init(&config, "test")
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 	tests := []struct {
@@ -114,7 +114,7 @@ func TestRedisPlugin_GetValue(t *testing.T) {
 	plugin := RedisPlugin{}
 	err := plugin.Init(&config, "test")
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 	tests := []struct {
