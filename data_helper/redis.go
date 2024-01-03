@@ -118,7 +118,7 @@ func (r *RedisPlugin) GetValue(ctx context.Context, key string, ptr interface{})
 // SetValue 通过Key设置Value
 func (r *RedisPlugin) SetValue(ctx context.Context, key string, value interface{}) error {
 	packValue, _ := msgpack.Marshal(value)
-	_, err := r.client.Set(ctx, key, packValue, time.Duration(r.ttl*1000000000)).Result()
+	_, err := r.client.Set(ctx, key, packValue, time.Duration(float64(r.ttl)*float64(time.Second)*util.RandFloat64())).Result()
 	return err
 }
 
@@ -158,26 +158,11 @@ func (r *RedisPlugin) BatchGetValue(ctx context.Context, keys []string, p reflec
 
 // BatchSetValue 批量插入
 func (r *RedisPlugin) BatchSetValue(ctx context.Context, pairs []util.Pair) error {
-	// 创建一个map来存储键值对
-	data := make(map[string]interface{})
-	for _, pair := range pairs {
-		// 创建一个buffer用于存储序列化后的数据
-		buffer := new(bytes.Buffer)
-		// 创建一个gob编码器
-		enc := gob.NewEncoder(buffer)
-		// 使用编码器将数据编码
-		if err := enc.Encode(pair.Value); err != nil {
+	for _, obj := range pairs {
+		err := r.SetValue(ctx, obj.Key, obj.Value)
+		if err != nil {
 			return err
 		}
-		// 将编码后的数据转换为字符串，然后存储到map中
-		data[pair.Key] = buffer.String()
-	}
-
-	// 使用MSet函数将所有键值对存储到Redis中
-	result := r.client.MSet(ctx, data)
-	// 检查是否有错误
-	if err := result.Err(); err != nil {
-		return err
 	}
 	return nil
 }
