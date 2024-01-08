@@ -46,4 +46,8 @@ func TestSecondLevelCache(t *testing.T) {
 	fmt.Print(users)
 }
 ```
+下载方式
+```.sh
+go get github.com/RexCoding-Yu/tang-cache
+```
 项目名是为了纪念我的好友兼恩师-阿里架构师唐崇杰
