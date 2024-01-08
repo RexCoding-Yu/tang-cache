@@ -5,14 +5,18 @@ import (
 	"context"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"github.com/RexCoding-Yu/tang-cache/config"
 	"github.com/RexCoding-Yu/tang-cache/util"
 	"github.com/go-redis/redis/v8"
 	"github.com/vmihailenco/msgpack/v5"
 	"log"
 	"reflect"
+	"sync"
 	"time"
 )
+
+const redisMaxLength int64 = 8 * 512 * 1024 * 1024 //512M
 
 type RedisPlugin struct {
 	client           *redis.Client     // redis客户端
@@ -183,4 +187,57 @@ func (r *RedisPlugin) BatchDeleteKeys(ctx context.Context, keys []string) (int64
 func (r *RedisPlugin) DeleteKeysWithPrefix(ctx context.Context, keyPrefix string) (int64, error) {
 	results := r.client.EvalSha(ctx, r.preloadScriptMap["batchKeyCleanScript"], []string{"0"}, keyPrefix+":*")
 	return results.Int64()
+}
+
+// SetBitValue 布隆过滤器-设置Bit
+func (r *RedisPlugin) SetBitValue(ctx context.Context, offsets []int64) error {
+	var wg sync.WaitGroup
+	doneChan := make(chan struct{}, 1)
+	errChan := make(chan error, 1)
+	for _, off := range offsets {
+		wg.Add(1)
+		go func(offset int64) {
+			defer wg.Done()
+			key, thisOffset := r.getKeyOffset(offset)
+			_, err := r.client.SetBit(ctx, key, thisOffset, 1).Result()
+			if err != nil {
+				errChan <- err
+				return
+			}
+		}(off)
+	}
+
+	go func() {
+		wg.Wait()
+		close(doneChan)
+	}()
+
+	select {
+	case <-doneChan:
+		return nil
+	case err := <-errChan:
+		return err
+	}
+}
+
+// Test 布隆过滤器-测试
+func (r *RedisPlugin) Test(ctx context.Context, offsets []int64) (bool, error) {
+	for _, offset := range offsets {
+		key, thisOffset := r.getKeyOffset(offset)
+		bitValue, err := r.client.GetBit(ctx, key, thisOffset).Result()
+		if err != nil {
+			return false, err
+		}
+		if bitValue == 0 {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (r *RedisPlugin) getKeyOffset(offset int64) (string, int64) {
+	index := int64(offset / redisMaxLength)
+	thisOffset := offset - index*redisMaxLength
+	key := fmt.Sprintf("%s:%d", r.keyPrefix, index)
+	return key, thisOffset
 }

@@ -20,4 +20,6 @@ type TangCacheInterface interface {
 	DeleteKey(ctx context.Context, key string) (int64, error)
 	BatchDeleteKeys(ctx context.Context, keys []string) (int64, error)
 	DeleteKeysWithPrefix(ctx context.Context, keyPrefix string) (int64, error)
+	SetBitValue(ctx context.Context, offsets []int64) error
+	Test(ctx context.Context, offsets []int64) (bool, error)
 }
