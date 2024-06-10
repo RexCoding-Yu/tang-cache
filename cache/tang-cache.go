@@ -106,7 +106,12 @@ func (c *TangCache) SetSearchCache(ctx context.Context, tableName string, value 
 
 func (c *TangCache) GetSearchCache(ctx context.Context, tableName string, sql string, p reflect.Type, args ...interface{}) (interface{}, error) {
 	key := util.GenSearchCacheKey(c.InstanceId, tableName, sql, args...)
-	ptr := reflect.New(p)
-	err := c.cache.GetValue(ctx, key, ptr)
+	var ptr reflect.Value
+	if p.Kind() == reflect.Ptr {
+		ptr = reflect.New(p.Elem())
+	} else {
+		ptr = reflect.New(p)
+	}
+	err := c.cache.GetValue(ctx, key, ptr.Interface())
 	return ptr, err
 }
